@@ -27,7 +27,7 @@ fs_db = firestore.client()
 
 MONGO_URI = os.environ.get(
     "MONGO_URI",
-    "mongodb+srv://kalani9uggalle_db_user:CYEdoMO5j3LtQOSr@cluster0.truaou2.mongodb.net/?appName=Cluster0"
+    "mongodb+srv://kalani9uggalle_db_user:CYEdoMO5j3LtQOSr@cluster0.truaou2.mongodb.net/?appName=Cluster0&tls=true&tlsAllowInvalidCertificates=true"
 )
 
 app = Flask(__name__)
@@ -94,7 +94,12 @@ def save_taps():
 
     # ── Write to MongoDB (client created per-request — fork safe) ─────────────
     try:
-        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        client = MongoClient(
+            MONGO_URI,
+            serverSelectionTimeoutMS=5000,
+            tls=True,
+            tlsAllowInvalidCertificates=True
+        )
         col    = client["clicklogs"]["tap_logs"]
         col.insert_many(documents)
         client.close()
