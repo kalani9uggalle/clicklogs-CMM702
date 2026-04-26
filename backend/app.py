@@ -1,7 +1,7 @@
 """
 saveTaps backend — Python Flask
 Writes to Firebase Firestore AND MongoDB Atlas.
-Fixed: MongoClient created per-request (fork-safe).
+Uses Python 3.11 (see runtime.txt) for SSL compatibility.
 """
 
 import json
@@ -27,7 +27,7 @@ fs_db = firestore.client()
 
 MONGO_URI = os.environ.get(
     "MONGO_URI",
-    "mongodb+srv://kalani9uggalle_db_user:CYEdoMO5j3LtQOSr@cluster0.truaou2.mongodb.net/?appName=Cluster0&tls=true&tlsAllowInvalidCertificates=true"
+    "mongodb+srv://kalani9uggalle_db_user:CYEdoMO5j3LtQOSr@cluster0.truaou2.mongodb.net/?appName=Cluster0"
 )
 
 app = Flask(__name__)
@@ -89,20 +89,16 @@ def save_taps():
         for doc in documents:
             batch.set(col_ref.document(), doc)
         batch.commit()
+        print("Firestore write OK")
     except Exception as e:
         print(f"Firestore error: {e}")
 
-    # ── Write to MongoDB (client created per-request — fork safe) ─────────────
+    # ── Write to MongoDB ──────────────────────────────────────────────────────
     try:
-        client = MongoClient(
-            MONGO_URI,
-            serverSelectionTimeoutMS=5000,
-            tls=True,
-            tlsAllowInvalidCertificates=True
-        )
-        col    = client["clicklogs"]["tap_logs"]
-        col.insert_many(documents)
+        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=10000)
+        client["clicklogs"]["tap_logs"].insert_many(documents)
         client.close()
+        print("MongoDB write OK")
     except Exception as e:
         print(f"MongoDB error: {e}")
 
